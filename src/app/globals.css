@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+:root {
+  --color-bg: #f4f6fb;
+  --color-ink: #14162b;
+  --color-ink-soft: #4a4d6b;
+  --color-primary: #ff3d7a;
+  --color-primary-ink: #5c0025;
+  --color-mint: #17c990;
+  --color-mint-ink: #0a4a34;
+  --color-blue: #3d5afe;
+  --color-yellow: #ffc93c;
+  --color-yellow-ink: #4a3200;
+  --color-surface: #ffffff;
+}
+
+@theme inline {
+  --color-bg: var(--color-bg);
+  --color-ink: var(--color-ink);
+  --color-ink-soft: var(--color-ink-soft);
+  --color-primary: var(--color-primary);
+  --color-primary-ink: var(--color-primary-ink);
+  --color-mint: var(--color-mint);
+  --color-mint-ink: var(--color-mint-ink);
+  --color-blue: var(--color-blue);
+  --color-yellow: var(--color-yellow);
+  --color-yellow-ink: var(--color-yellow-ink);
+  --color-surface: var(--color-surface);
+  --font-sans: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR",
+    system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
+
+/* 시그니처 스타일: 하드 스티커 섀도우 (블러 없는 오프셋 그림자) */
+.sticker {
+  border: 3px solid var(--color-ink);
+  box-shadow: 6px 6px 0 var(--color-ink);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sticker:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 var(--color-ink);
+}
+
+.sticker:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--color-ink);
+}
+
+.sticker-sm {
+  border: 2px solid var(--color-ink);
+  box-shadow: 3px 3px 0 var(--color-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sticker {
+    transition: none;
+  }
+}
