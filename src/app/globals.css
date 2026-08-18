@@ -58,6 +58,11 @@ body {
   box-shadow: 6px 6px 0 var(--color-ink);
 }
 
+.sticker-sm {
+  border: 2px solid var(--color-ink);
+  box-shadow: 3px 3px 0 var(--color-ink);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sticker {
     transition: none;
