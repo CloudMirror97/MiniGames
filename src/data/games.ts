@@ -8,6 +8,13 @@ export type Game = {
 
 export const games: Game[] = [
   {
+    slug: "ninja-dodge",
+    title: "닌자 도망",
+    tagline: "사방에서 날아오는 표창을 피하고 베어내기",
+    tag: "신규",
+    color: "primary",
+  },
+  {
     slug: "tetris",
     title: "테트리스",
     tagline: "떨어지는 블록을 쌓는 클래식 퍼즐",
