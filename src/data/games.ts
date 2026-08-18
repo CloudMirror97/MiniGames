@@ -63,4 +63,12 @@ export const games: Game[] = [
   tag: "신규",
   color: "blue",
   },
+  {
+    slug: "escape-from-barkham",
+    title: "Escape from Barkham",
+    tagline: "버려진 강아지의 집으로 가는 길",
+    tag: "신규",
+    color: "yellow",
+  },
+
 ];
