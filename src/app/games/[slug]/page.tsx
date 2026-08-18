@@ -36,14 +36,11 @@ export default async function GamePage({
         <p className="mb-6 text-ink-soft">{game.tagline}</p>
 
         {game.tag !== "준비중" ? (
-          <div className="sticker-static overflow-hidden rounded-xl bg-surface">
-            <iframe
-              src={`/games/${game.slug}/index.html`}
-              className="aspect-[10/7] w-full"
-              style={{ border: "none" }}
-              title={game.title}
-            />
-          </div>
+          <GameFrame
+            src={`/games/${game.slug}/index.html`}
+            title={game.title}
+            size={game.size}
+          />
         ) : (
           <div className="sticker flex aspect-video w-full items-center justify-center rounded-xl bg-surface">
             <p className="text-center text-ink-soft">
