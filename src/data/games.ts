@@ -70,5 +70,11 @@ export const games: Game[] = [
     tag: "신규",
     color: "yellow",
   },
-
+  {
+  slug: "the-narrow",
+  title: "더 내로우",
+  tagline: "빙하 틈을 통과하는 점 무리",
+  tag: "신규",
+  color: "blue",
+  },
 ];
