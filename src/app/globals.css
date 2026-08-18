@@ -52,9 +52,10 @@ body {
   box-shadow: 2px 2px 0 var(--color-ink);
 }
 
-.sticker-sm {
-  border: 2px solid var(--color-ink);
-  box-shadow: 3px 3px 0 var(--color-ink);
+/* iframe(게임)을 감싸는 프레임용 — 스티커 룩은 유지하되 움직이지 않는다 */
+.sticker-static {
+  border: 3px solid var(--color-ink);
+  box-shadow: 6px 6px 0 var(--color-ink);
 }
 
 @media (prefers-reduced-motion: reduce) {
