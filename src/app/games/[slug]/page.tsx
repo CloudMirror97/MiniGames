@@ -34,14 +34,24 @@ export default async function GamePage({
         <h1 className="mb-2 text-3xl font-black md:text-4xl">{game.title}</h1>
         <p className="mb-6 text-ink-soft">{game.tagline}</p>
 
-        {/* 실제 게임은 이 자리에 iframe 또는 캔버스로 삽입 예정 */}
-        <div className="sticker flex aspect-video w-full items-center justify-center rounded-xl bg-surface">
-          <p className="text-center text-ink-soft">
-            게임 콘텐츠 준비중입니다.
-            <br />
-            여기에 실제 게임 파일(iframe/캔버스)이 들어갈 자리예요.
-          </p>
-        </div>
+        {game.slug === "ninja-dodge" ? (
+          <div className="sticker overflow-hidden rounded-xl bg-surface">
+            <iframe
+              src={`/games/${game.slug}/index.html`}
+              className="aspect-[10/7] w-full"
+              style={{ border: "none" }}
+              title={game.title}
+            />
+          </div>
+        ) : (
+          <div className="sticker flex aspect-video w-full items-center justify-center rounded-xl bg-surface">
+            <p className="text-center text-ink-soft">
+              게임 콘텐츠 준비중입니다.
+              <br />
+              여기에 실제 게임 파일(iframe/캔버스)이 들어갈 자리예요.
+            </p>
+          </div>
+        )}
       </section>
       <Footer />
     </main>
