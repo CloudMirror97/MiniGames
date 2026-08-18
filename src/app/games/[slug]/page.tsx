@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import GameFrame from "@/components/GameFrame";
 import { games } from "@/data/games";
 
 export function generateStaticParams() {
