@@ -4,6 +4,7 @@ export type Game = {
   tagline: string;
   tag: "신규" | "인기" | "준비중";
   color: "primary" | "mint" | "blue" | "yellow";
+  size?: { width: number; height: number };
 };
 
 export const games: Game[] = [
@@ -13,6 +14,7 @@ export const games: Game[] = [
     tagline: "사방에서 날아오는 표창을 피하고 베어내기",
     tag: "신규",
     color: "primary",
+    size: { width: 620, height: 500 },
   },
   {
     slug: "tetris",
@@ -62,6 +64,7 @@ export const games: Game[] = [
   tagline: "5개 층을 뚫는 로그라이크 던전 슈터",
   tag: "신규",
   color: "blue",
+  size: { width: 912, height: 612 },  
   },
   {
     slug: "escape-from-barkham",
