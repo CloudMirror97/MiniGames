@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>THE NARROW &mdash; a swarm in the ice</title>
+<meta name="description" content="Guide a swarm of dots through a closing crack in the glacier. Every wall you touch costs you a dot. How deep can you get?" />
+<meta name="theme-color" content="#EEF5F9" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="THE NARROW" />
+<meta property="og:description" content="A swarm of dots, a closing crack in the ice. How deep can you get?" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23EEF5F9'/%3E%3Cpath d='M2 9 Q10 4 16 9 T30 8' stroke='%231B2A38' stroke-width='2.4' fill='none'/%3E%3Cpath d='M2 24 Q10 19 16 24 T30 23' stroke='%231B2A38' stroke-width='2.4' fill='none'/%3E%3Ccircle cx='11' cy='16' r='2' fill='%231B2A38'/%3E%3Ccircle cx='16' cy='15' r='2' fill='%231B2A38'/%3E%3Ccircle cx='15' cy='19' r='1.6' fill='%231B2A38'/%3E%3C/svg%3E" />
+<style>
+  :root{
+    --snow:#EEF5F9;
+    --ice:#1B2A38;
+    --glacier:#2E7FA6;
+    --blood:#B3352C;
+    --ember:#D9772B;
+    --frost:#8AA3B4;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--snow);overflow:hidden;overscroll-behavior:none}
+  body{
+    position:fixed;inset:0;touch-action:none;
+    font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+    color:var(--ice);
+    user-select:none;
+  }
+  #stage{position:fixed;inset:0}
+  canvas{display:block;width:100%;height:100%}
+
+  #hud{position:absolute;inset:0;pointer-events:none}
+  #btn-pause{
+    position:absolute;right:16px;bottom:16px;width:46px;height:46px;padding:0;
+    pointer-events:auto;background:transparent;border:2px solid var(--ice);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;gap:5px;opacity:.55;
+  }
+  #btn-pause i{display:block;width:4px;height:15px;background:var(--ice)}
+  #btn-pause:active{opacity:1}
+  #btn-full{
+    position:absolute;right:70px;bottom:16px;width:46px;height:46px;padding:0;
+    pointer-events:auto;background:transparent;border:2px solid var(--ice);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;opacity:.55;
+  }
+  #btn-full i{display:block;width:15px;height:13px;border:2px solid var(--ice)}
+  #btn-full:active{opacity:1}
+  #btn-full.off{display:none}
+  .note{position:absolute;color:var(--glacier);letter-spacing:.14em;font-size:12px}
+  .note b{display:block;font-size:26px;letter-spacing:.02em;line-height:1;margin-top:3px;font-weight:700}
+  #n-dots{left:22px;top:18px}
+  #n-dist{right:22px;top:18px;text-align:right}
+  #n-best{right:22px;top:74px;text-align:right;color:var(--frost);font-size:11px}
+  #n-best b{font-size:15px;color:var(--frost)}
+  #n-zone{left:22px;bottom:20px;color:var(--frost);font-size:11px}
+  #n-zone b{font-size:14px;color:var(--ice);letter-spacing:.2em}
+  #toast{
+    position:absolute;left:50%;top:64px;transform:translateX(-50%) rotate(-2.5deg);
+    color:var(--ember);font-size:15px;letter-spacing:.22em;opacity:0;
+    border-bottom:2px solid var(--ember);padding-bottom:2px;
+    transition:opacity .25s ease;
+  }
+  #toast.on{opacity:1}
+  #toast.cold{color:var(--glacier);border-color:var(--glacier)}
+
+  #screen{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:20px;
+    background:rgba(238,245,249,.92);
+  }
+  #screen.hide{display:none}
+  h1{
+    margin:0;font-family:"Arial Narrow","Helvetica Neue",Impact,sans-serif;
+    font-weight:700;font-size:clamp(46px,13vw,104px);letter-spacing:-.02em;
+    text-transform:uppercase;line-height:.86;text-align:center;
+  }
+  h1 span{display:block;font-size:.3em;letter-spacing:.4em;color:var(--frost);font-weight:400;margin-bottom:10px}
+  #lede{max-width:440px;text-align:center;font-size:13px;line-height:1.9;padding:0 24px}
+  #lede em{font-style:normal;color:var(--blood)}
+  .keys{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  button{
+    pointer-events:auto;cursor:pointer;font:inherit;font-size:13px;letter-spacing:.16em;
+    text-transform:uppercase;padding:12px 22px;color:var(--snow);background:var(--ice);
+    border:none;border-radius:2px;
+  }
+  button.ghost{background:transparent;color:var(--ice);border:2px solid var(--ice)}
+  button:focus-visible{outline:3px solid var(--glacier);outline-offset:3px}
+  button:active{transform:translateY(1px)}
+  #pause{
+    position:absolute;inset:0;display:none;flex-direction:column;
+    align-items:center;justify-content:center;gap:18px;
+    background:rgba(238,245,249,.72);backdrop-filter:blur(3px);
+  }
+  #pause.on{display:flex}
+  #pause h2{
+    margin:0;font-family:"Arial Narrow","Helvetica Neue",Impact,sans-serif;
+    font-weight:700;font-size:clamp(38px,9vw,68px);letter-spacing:.02em;
+    text-transform:uppercase;line-height:.9;text-align:center;
+  }
+  #pause h2 span{display:block;font-size:.24em;letter-spacing:.4em;color:var(--frost);font-weight:400;margin-bottom:10px}
+  #p-stats{font-size:12px;letter-spacing:.16em;color:var(--frost);text-align:center;line-height:2}
+  #p-stats strong{color:var(--ice);font-weight:700}
+  #p-hint{font-size:11px;letter-spacing:.2em;color:var(--frost);text-align:center;padding:0 20px}
+  #rotate{display:none;font-size:11px;letter-spacing:.18em;color:var(--frost)}
+  #stats{font-size:12px;letter-spacing:.16em;color:var(--frost);text-align:center;line-height:2}
+  #stats strong{color:var(--ice);font-weight:700}
+  @media (max-width:560px){
+    .note{font-size:10px}
+    .note b{font-size:20px}
+    #n-dots{left:14px;top:12px}
+    #n-dist{right:14px;top:12px}
+    #n-best{right:14px;top:54px}
+    #n-best b{font-size:13px}
+    #n-zone{left:14px;bottom:18px}
+    #lede{font-size:12px;line-height:1.8}
+    #toast{top:52px;font-size:13px}
+    button{padding:14px 20px}
+    #screen,#pause{gap:14px}
+  }
+  @media (max-width:640px) and (orientation:portrait){ #rotate{display:block} }
+  @media (prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="c"></canvas>
+
+  <div id="hud">
+    <div class="note" id="n-dots">DOTS ALIVE<b>0</b></div>
+    <div class="note" id="n-dist">DEPTH<b>0 m</b></div>
+    <div class="note" id="n-best">BEST<b>0 m</b></div>
+    <div class="note" id="n-zone">SECTION<b>THE CRACK</b></div>
+    <div id="toast">SAVED HERE</div>
+    <button id="btn-full" aria-label="Fullscreen"><i></i></button>
+    <button id="btn-pause" aria-label="Pause"><i></i><i></i></button>
+  </div>
+
+  <div id="pause">
+    <h2><span>the wind holds its breath</span>Paused</h2>
+    <div id="p-stats"></div>
+    <div class="keys">
+      <button id="btn-resume">Resume</button>
+      <button id="btn-quit" class="ghost">Leave the crack</button>
+    </div>
+    <div id="p-hint">ESC OR TAP THE ICE TO RESUME</div>
+  </div>
+
+  <div id="screen">
+    <h1><span>a swarm inside the mountain</span>The<br>Narrow</h1>
+    <p id="lede">
+      A crack in the glacier, and it keeps closing.<br>
+      Tap to lift the swarm. Touch ice and that dot is <em>gone</em>.<br>
+      Reach the next group to grow. Get as deep as you can.
+    </p>
+    <div class="keys">
+      <button id="btn-main">Start</button>
+    </div>
+    <div id="stats"></div>
+    <div id="rotate">&#8635; TURN SIDEWAYS FOR A WIDER VIEW</div>
+  </div>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* ============================ constants ============================ */
+let  LEAD_X    = 240;   // recomputed per viewport
+const GRAV      = 1250;
+const JUMP      = 372;
+const DOT_R     = 2.7;
+const R_MIN     = 8, R_MAX = 22;
+const GROUP_0   = 1500, GROUP_GAP = 1700, GROUP_R = 78;
+const SEED      = 7.31;
+
+const SNOW    = "#EEF5F9";
+const ICE     = "#1B2A38";
+const GLACIER = "#2E7FA6";
+const BLOOD   = "#B3352C";
+const EMBER   = "#D9772B";
+const FROST   = "#8AA3B4";
+const PACK    = "#D7E6EE";
+const CAP     = "#FFFFFF";
+
+/* ---- sections: each one adds a new hazard on top of the last ---- */
+const ZONES = [
+  { x: 0,     name: "THE CRACK", spike: 0,    wind: 0,   drop: 0,    gate: 0, snow: 0.35 },
+  { x: 3600,  name: "ICICLES",   spike: 0.26, wind: 0,   drop: 0,    gate: 0, snow: 0.5  },
+  { x: 7200,  name: "THE DRAFT", spike: 0.32, wind: 1,   drop: 0,    gate: 0, snow: 0.7  },
+  { x: 11000, name: "ICEFALL",   spike: 0.36, wind: 1,   drop: 0.40, gate: 0, snow: 0.8  },
+  { x: 15000, name: "THE PINCH", spike: 0.40, wind: 1.1, drop: 0.45, gate: 1, snow: 0.9  },
+  { x: 20000, name: "WHITEOUT",  spike: 0.50, wind: 1.4, drop: 0.60, gate: 1, snow: 1.0  }
+];
+function zoneAt(x){
+  let z = ZONES[0];
+  for (let i = 1; i < ZONES.length; i++) if (x >= ZONES[i].x) z = ZONES[i];
+  return z;
+}
+
+/* ============================ canvas ============================ */
+const cv = document.getElementById("c");
+const ctx = cv.getContext("2d");
+let W = 0, H = 0, DPR = 1;
+let Z = 1, VW = 1200, VH = 700, LK = 1, SPD = 1;
+
+function resize(){
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = cv.clientWidth; H = cv.clientHeight;
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+
+  /* zoom out on small screens so there is still room to react */
+  Z  = Math.max(0.5, Math.min(1, Math.max(W / 1150, H / 1200)));
+  VW = W / Z; VH = H / Z;
+  LEAD_X = Math.max(120, Math.min(260, VW * 0.22));
+  LK  = Math.min(1.7, 1 / Z);              // keeps lines and dots readable when zoomed out
+  SPD = Math.max(0.62, Math.min(1, VW / 1180));   // narrow views scroll slower, same reaction time
+
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  buildGrain(); buildSky();
+  if (flakes.length) buildFlakes();
+}
+window.addEventListener("resize", resize);
+window.addEventListener("orientationchange", () => setTimeout(resize, 250));
+if (window.visualViewport) window.visualViewport.addEventListener("resize", resize);
+
+let grain = null, sky = null;
+function buildGrain(){
+  const g = document.createElement("canvas");
+  g.width = 220; g.height = 220;
+  const gx = g.getContext("2d");
+  const img = gx.createImageData(220, 220);
+  for (let i = 0; i < img.data.length; i += 4){
+    const v = 210 + Math.random() * 45;
+    img.data[i] = img.data[i+1] = v; img.data[i+2] = 255;
+    img.data[i+3] = Math.random() < 0.14 ? 22 : 0;
+  }
+  gx.putImageData(img, 0, 0);
+  grain = ctx.createPattern(g, "repeat");
+}
+function buildSky(){
+  sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, "#E4EFF6");
+  sky.addColorStop(0.45, SNOW);
+  sky.addColorStop(1, "#DCE9F1");
+}
+
+/* ============================ world shape ============================ */
+function hash(n){ const v = Math.sin(n*127.1 + SEED) * 43758.5453; return v - Math.floor(v); }
+
+function centerY(x){
+  return Math.sin(x*0.00135 + 1.1)*96
+       + Math.sin(x*0.00042 + 4.4)*74
+       + Math.sin(x*0.00380 + 2.2)*30;
+}
+function gateSquash(x){
+  if (!zoneAt(x).gate) return 0;
+  const per = 1250, i = Math.round(x / per);
+  if (hash(i*5.93) < 0.45) return 0;
+  const d = (x - i*per) / 150;
+  return Math.exp(-d*d) * 20;
+}
+function halfGap(x){
+  const base = 152 - Math.min(47, Math.max(0, x - 900) * 0.0060);
+  return base + Math.sin(x*0.00290 + 0.7)*20 + Math.sin(x*0.00710 + 3.3)*10 - gateSquash(x);
+}
+const topY    = x => centerY(x) - halfGap(x);
+const bottomY = x => centerY(x) + halfGap(x);
+
+/* ---- frozen boulders ---- */
+function rockAt(i){
+  const h1 = hash(i*3.17), h2 = hash(i*7.71), h3 = hash(i*11.33);
+  if (h1 < 0.34) return null;
+  const x = 1150 + i*540 + h2*180;
+  const g = halfGap(x);
+  return { x, y: centerY(x) + (h2 - 0.5) * g * 0.55, r: Math.min(g*0.26, 12 + h3*16), s: h3 };
+}
+const ROCK_STEP = 540;
+
+/* ---- icicles / floor spikes ---- */
+const SP_STEP = 230;
+function spikeAt(i){
+  const x = i*SP_STEP + hash(i*2.13)*90;
+  const z = zoneAt(x);
+  if (z.spike <= 0 || hash(i*4.77) > z.spike) return null;
+  const g = halfGap(x), c = centerY(x);
+  const up = hash(i*9.31) < 0.55;
+  const len = g * (0.28 + hash(i*13.7)*0.22);
+  const by = up ? c - g : c + g;
+  return { x, by, ty: up ? by + len : by - len, hw: 6.5 + hash(i*17.3)*5, up, s: hash(i*21.7) };
+}
+
+/* ---- falling ice ---- */
+const DROP_STEP = 620;
+function dropAt(i){
+  const x = i*DROP_STEP + hash(i*3.53)*220;
+  const z = zoneAt(x);
+  if (z.drop <= 0 || hash(i*6.61) > z.drop) return null;
+  return { x, r: 8 + hash(i*8.91)*7 };
+}
+
+/* ---- vertical draft ---- */
+const WIND_STEP = 820;
+function windAt(x){
+  const z = zoneAt(x);
+  if (!z.wind) return 0;
+  const i = Math.floor(x / WIND_STEP);
+  if (hash(i*23.7) < 0.42) return 0;
+  return (hash(i*29.1) < 0.5 ? -1 : 1) * (150 + hash(i*31.3)*130) * z.wind;
+}
+
+const groupX = i => GROUP_0 + i*GROUP_GAP;
+
+/* ============================ save ============================ */
+const mem = {};
+const store = {
+  async get(k){
+    try { const v = localStorage.getItem(k); if (v !== null) return v; } catch(e){}
+    try { const r = await window.storage.get(k); if (r && r.value != null) return r.value; } catch(e){}
+    return mem[k] ?? null;
+  },
+  async set(k, v){
+    mem[k] = v;
+    try { localStorage.setItem(k, v); } catch(e){}
+    try { await window.storage.set(k, v); } catch(e){}
+  }
+};
+const KEY = "the-narrow.score.v1";
+let hi = { best: 0, bestDots: 0, runs: 0 };
+async function loadSave(){
+  const raw = await store.get(KEY);
+  if (!raw) return;
+  try { const o = JSON.parse(raw); if (o && typeof o === "object") hi = Object.assign(hi, o); } catch(e){}
+}
+function writeSave(){ store.set(KEY, JSON.stringify(hi)); }
+
+/* ============================ state ============================ */
+const S = { INTRO:0, PLAY:1, DEAD:2, PAUSE:3 };
+let mode = S.INTRO;
+
+let camX = 0, camY = 0;
+let lead = { y: 0, vy: 0 };
+let dots = [], marks = [], flakes = [], drops = new Map(), taken = new Set();
+let dist = 0, speed = 190, shake = 0, deadT = 0, toastT = 0, zoneName = "THE CRACK";
+let peakDots = 0, recordHit = false, isRecord = false;
+
+function makeDot(){
+  const a = Math.random() * Math.PI * 2, d = Math.sqrt(Math.random());
+  return {
+    x: camX + LEAD_X + Math.cos(a)*d*14, y: lead.y + Math.sin(a)*d*14,
+    vx: 0, vy: 0, ox: Math.cos(a)*d, oy: Math.sin(a)*d,
+    k: 62 + Math.random()*26, p: Math.random()*Math.PI*2
+  };
+}
+function swarmR(){ return Math.min(R_MAX, R_MIN + Math.sqrt(dots.length) * 2.7); }
+
+function buildFlakes(){
+  flakes = [];
+  const n = Math.max(60, Math.min(170, Math.round(W * H / 9000)));
+  for (let i = 0; i < n; i++){
+    flakes.push({
+      x: Math.random()*W, y: Math.random()*H,
+      l: 0.35 + Math.random()*0.9,
+      ph: Math.random()*Math.PI*2
+    });
+  }
+}
+
+function begin(){
+  camX = 0;
+  lead.y = centerY(LEAD_X); lead.vy = 0;
+  camY = lead.y - VH/2;
+  dots = []; marks = []; drops.clear(); taken.clear();
+  for (let i = 0; i < 8; i++) dots.push(makeDot());
+  dist = 0; speed = 190; shake = 0; deadT = 0; toastT = 0;
+  peakDots = 8; recordHit = false; isRecord = false;
+  zoneName = ZONES[0].name;
+  buildFlakes();
+  mode = S.PLAY;
+  screenEl.classList.add("hide");
+  pauseEl.classList.remove("on");
+}
+
+function setPaused(on){
+  if (on){
+    if (mode !== S.PLAY) return;
+    mode = S.PAUSE;
+    document.getElementById("p-stats").innerHTML =
+      "<strong>" + dots.length + " dots</strong> at <strong>" +
+      Math.max(0, Math.floor((camX + LEAD_X)/10)) + " m</strong><br>section <strong>" + zoneName + "</strong>";
+    pauseEl.classList.add("on");
+    document.getElementById("btn-resume").focus({ preventScroll: true });
+  } else {
+    if (mode !== S.PAUSE) return;
+    mode = S.PLAY;
+    last = performance.now();
+    pauseEl.classList.remove("on");
+  }
+}
+
+function jump(){ if (mode === S.PLAY) lead.vy = -JUMP; }
+
+function die(){
+  mode = S.DEAD;
+  const reached = Math.floor((camX + LEAD_X) / 10);
+  isRecord = hi.runs > 0 && reached > hi.best;
+  if (isRecord) hi.best = reached;
+  if (peakDots > hi.bestDots) hi.bestDots = peakDots;
+  hi.runs++;
+  writeSave();
+  showScreen(true);
+}
+
+const toastEl = document.getElementById("toast");
+function toast(msg, cold){
+  toastEl.textContent = msg;
+  toastEl.classList.toggle("cold", !!cold);
+  toastEl.classList.add("on");
+  toastT = 1.9;
+}
+
+/* ============================ loop ============================ */
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(0.033, (now - last) / 1000);
+  last = now;
+  if (mode === S.PLAY) step(dt);
+  else if (mode === S.DEAD){ deadT += dt; stepParticles(dt); }
+  if (mode !== S.PAUSE) driftFlakes(dt);
+  if (toastT > 0){ toastT -= dt; if (toastT <= 0) toastEl.classList.remove("on"); }
+  draw();
+  requestAnimationFrame(frame);
+}
+
+function segHit(px, py, ax, ay, bx, by, hw){
+  const dx = bx - ax, dy = by - ay;
+  const len2 = dx*dx + dy*dy || 1;
+  let t = ((px - ax)*dx + (py - ay)*dy) / len2;
+  t = t < 0 ? 0 : t > 1 ? 1 : t;
+  const cx = ax + dx*t, cy = ay + dy*t;
+  const d2 = (px-cx)*(px-cx) + (py-cy)*(py-cy);
+  const rr = hw * (1 - t) + DOT_R;
+  return d2 < rr*rr;
+}
+
+function step(dt){
+  dist = camX + LEAD_X;
+  if (!recordHit && hi.best > 0 && Math.floor(dist / 10) > hi.best){
+    recordHit = true; toast("NEW BEST", true);
+  }
+  speed = (190 + Math.min(150, (camX + LEAD_X) * 0.011)) * SPD;
+  camX += speed * dt;
+
+  const lx = camX + LEAD_X;
+  const wind = windAt(lx);
+
+  lead.vy += (GRAV + wind) * dt;
+  lead.y  += lead.vy * dt;
+  camY += ((centerY(lx) - VH/2) - camY) * Math.min(1, dt * 5.5);
+
+  /* section banner */
+  const z = zoneAt(lx);
+  if (z.name !== zoneName){ zoneName = z.name; toast(z.name, true); }
+
+  /* falling ice bookkeeping */
+  const di0 = Math.floor((lx - 400) / DROP_STEP), di1 = di0 + Math.ceil(VW/DROP_STEP) + 2;
+  for (let i = di0; i <= di1; i++){
+    if (drops.has(i)) continue;
+    const d = dropAt(i);
+    if (!d) { drops.set(i, null); continue; }
+    drops.set(i, { x: d.x, y: topY(d.x) + d.r*0.6, r: d.r, vy: 0, fall: false, gone: false });
+  }
+  for (const [i, d] of drops){
+    if (!d || d.gone) continue;
+    if (!d.fall && lx > d.x - 300) d.fall = true;
+    if (d.fall){
+      d.vy += 900 * dt;
+      d.y += d.vy * dt;
+      if (d.y > bottomY(d.x) + 60) d.gone = true;
+    }
+  }
+
+  const R = swarmR();
+  for (let i = dots.length - 1; i >= 0; i--){
+    const d = dots[i];
+    d.p += dt * 1.6;
+    const tx = lx + d.ox * R + Math.cos(d.p) * 1.6;
+    const ty = lead.y + d.oy * R + Math.sin(d.p * 1.3) * 1.6;
+    const damp = 2 * Math.sqrt(d.k) * 0.82;
+    d.vx += ((tx - d.x) * d.k - d.vx * damp) * dt;
+    d.vy += ((ty - d.y) * d.k - d.vy * damp) * dt;
+    d.x += d.vx * dt; d.y += d.vy * dt;
+
+    let hit = d.y - DOT_R < topY(d.x) || d.y + DOT_R > bottomY(d.x);
+
+    if (!hit){
+      const r0 = Math.floor((d.x - 1500) / ROCK_STEP);
+      for (let k = r0; k <= r0 + 3 && !hit; k++){
+        const r = rockAt(k); if (!r) continue;
+        const dx = d.x - r.x, dy = d.y - r.y;
+        if (dx*dx + dy*dy < (r.r + DOT_R)*(r.r + DOT_R)) hit = true;
+      }
+    }
+    if (!hit){
+      const s0 = Math.floor(d.x / SP_STEP) - 1;
+      for (let k = s0; k <= s0 + 2 && !hit; k++){
+        const s = spikeAt(k); if (!s) continue;
+        if (Math.abs(d.x - s.x) > 40) continue;
+        if (segHit(d.x, d.y, s.x, s.by, s.x, s.ty, s.hw)) hit = true;
+      }
+    }
+    if (!hit){
+      const k0 = Math.floor(d.x / DROP_STEP) - 1;
+      for (let k = k0; k <= k0 + 2 && !hit; k++){
+        const p = drops.get(k); if (!p || p.gone) continue;
+        const dx = d.x - p.x, dy = d.y - p.y;
+        if (dx*dx + dy*dy < (p.r + DOT_R)*(p.r + DOT_R)) hit = true;
+      }
+    }
+
+    if (hit){
+      splat(d.x, d.y);
+      dots.splice(i, 1);
+      shake = Math.min(7, shake + 2.6);
+    }
+  }
+
+  /* next group */
+  const gi = Math.max(0, Math.floor((lx - GROUP_0) / GROUP_GAP));
+  for (let k = gi - 1; k <= gi + 1; k++){
+    if (k < 0 || taken.has(k)) continue;
+    const gx = groupX(k), gy = centerY(gx);
+    const dx = lx - gx, dy = lead.y - gy;
+    if (dx*dx + dy*dy < GROUP_R*GROUP_R){
+      taken.add(k);
+      const add = 5 + (k % 4);
+      for (let j = 0; j < add; j++) dots.push(makeDot());
+      for (let j = 0; j < 16; j++) marks.push(ring(gx, gy));
+      if (dots.length > peakDots) peakDots = dots.length;
+      toast("+" + add + " DOTS", false);
+    }
+  }
+
+  stepParticles(dt);
+  shake *= Math.pow(0.0015, dt);
+  if (dots.length === 0) die();
+}
+
+function splat(x, y){
+  for (let i = 0; i < 7; i++){
+    const a = Math.random()*Math.PI*2, s = 40 + Math.random()*170;
+    marks.push({ x, y, vx: Math.cos(a)*s, vy: Math.sin(a)*s, life: .5 + Math.random()*.4, t: 0, r: 1 + Math.random()*1.8, c: BLOOD });
+  }
+}
+function ring(x, y){
+  const a = Math.random()*Math.PI*2, s = 30 + Math.random()*60;
+  return { x, y, vx: Math.cos(a)*s, vy: Math.sin(a)*s, life: .7, t: 0, r: 1.4, c: EMBER };
+}
+function stepParticles(dt){
+  for (let i = marks.length - 1; i >= 0; i--){
+    const m = marks[i];
+    m.t += dt;
+    if (m.t >= m.life){ marks.splice(i, 1); continue; }
+    m.x += m.vx*dt; m.y += m.vy*dt;
+    m.vx *= 0.94; m.vy = m.vy*0.94 + 260*dt;
+  }
+}
+function driftFlakes(dt){
+  const heavy = mode === S.INTRO ? 0.35 : zoneAt(camX + LEAD_X).snow;
+  const n = Math.floor(flakes.length * heavy);
+  for (let i = 0; i < n; i++){
+    const f = flakes[i];
+    f.ph += dt * 1.3;
+    f.y += (18 + f.l * 46) * dt;
+    f.x -= (10 + f.l * 26) * dt + Math.sin(f.ph) * 8 * dt;
+    if (f.y > H + 6){ f.y = -6; f.x = Math.random()*W; }
+    if (f.x < -6) f.x = W + 6;
+  }
+}
+
+/* ============================ drawing ============================ */
+function wobble(x){ return Math.sin(x*0.21)*1.5 + Math.sin(x*0.63+2)*0.8; }
+function wallPath(fn, dir, x0, x1){
+  ctx.beginPath();
+  for (let x = x0; x <= x1; x += 7){
+    const y = fn(x) + wobble(x)*dir;
+    if (x === x0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+}
+
+function draw(){
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.fillStyle = sky || SNOW; ctx.fillRect(0, 0, W, H);
+
+  const sx = shake > .1 ? (Math.random()-.5)*shake : 0;
+  const sy = shake > .1 ? (Math.random()-.5)*shake : 0;
+  ctx.save();
+  ctx.scale(Z, Z);
+  ctx.translate(-camX + sx, -camY + sy);
+
+  const x0 = camX - 40, x1 = camX + VW + 40;
+  const yTop = camY - 4000, yBot = camY + VH + 4000;
+
+  /* packed ice outside the crack */
+  ctx.fillStyle = PACK;
+  ctx.beginPath(); ctx.moveTo(x0, yTop);
+  for (let x = x0; x <= x1; x += 7) ctx.lineTo(x, topY(x) + wobble(x));
+  ctx.lineTo(x1, yTop); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x0, yBot);
+  for (let x = x0; x <= x1; x += 7) ctx.lineTo(x, bottomY(x) - wobble(x));
+  ctx.lineTo(x1, yBot); ctx.closePath(); ctx.fill();
+
+  /* strata lines in the ice */
+  ctx.strokeStyle = "rgba(46,127,166,0.20)"; ctx.lineWidth = 1*LK;
+  ctx.beginPath();
+  for (let o = 16; o <= 74; o += 19){
+    for (let x = x0; x <= x1; x += 10){
+      const y = topY(x) - o;
+      if (x === x0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    for (let x = x1; x >= x0; x -= 10){
+      const y = bottomY(x) + o;
+      if (x === x1) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+  }
+  ctx.stroke();
+
+  /* draft streaks */
+  const wi0 = Math.floor(x0 / WIND_STEP), wi1 = Math.floor(x1 / WIND_STEP);
+  for (let i = wi0; i <= wi1; i++){
+    const wx = i*WIND_STEP + WIND_STEP/2;
+    const w = windAt(wx);
+    if (!w) continue;
+    const dir = Math.sign(w);
+    ctx.strokeStyle = "rgba(46,127,166,0.28)"; ctx.lineWidth = 1.4*LK;
+    ctx.beginPath();
+    for (let j = 0; j < 7; j++){
+      const px = i*WIND_STEP + 60 + j*100;
+      const g = halfGap(px), c = centerY(px);
+      const py = c + (hash(i*7+j) - .5) * g * 1.5;
+      ctx.moveTo(px, py); ctx.lineTo(px + 26, py + 20*dir);
+      ctx.moveTo(px + 26, py + 20*dir); ctx.lineTo(px + 17, py + 15*dir);
+    }
+    ctx.stroke();
+  }
+
+  /* snow cap, then the dark edge of the crack */
+  ctx.lineJoin = ctx.lineCap = "round";
+  ctx.strokeStyle = CAP; ctx.lineWidth = 9*LK;
+  wallPath(x => topY(x) + 4, 1, x0, x1); ctx.stroke();
+  wallPath(x => bottomY(x) - 4, -1, x0, x1); ctx.stroke();
+  ctx.strokeStyle = "rgba(27,42,56,0.20)"; ctx.lineWidth = 4.5*LK;
+  wallPath(topY, 1, x0, x1); ctx.stroke();
+  wallPath(bottomY, -1, x0, x1); ctx.stroke();
+  ctx.strokeStyle = ICE; ctx.lineWidth = 2.4*LK;
+  wallPath(topY, 1, x0, x1); ctx.stroke();
+  wallPath(bottomY, -1, x0, x1); ctx.stroke();
+
+  /* icicles */
+  const si0 = Math.floor(x0 / SP_STEP) - 1, si1 = Math.floor(x1 / SP_STEP) + 1;
+  for (let i = si0; i <= si1; i++){
+    const s = spikeAt(i); if (!s) continue;
+    ctx.beginPath();
+    ctx.moveTo(s.x - s.hw, s.by);
+    ctx.lineTo(s.x + s.hw, s.by);
+    ctx.lineTo(s.x + (s.s - .5)*6, s.ty);
+    ctx.closePath();
+    ctx.fillStyle = "#F4FAFD"; ctx.fill();
+    ctx.strokeStyle = ICE; ctx.lineWidth = 1.9*LK; ctx.stroke();
+    ctx.strokeStyle = "rgba(46,127,166,0.45)"; ctx.lineWidth = 1*LK;
+    ctx.beginPath();
+    ctx.moveTo(s.x - s.hw*0.3, s.by + (s.up ? 3 : -3));
+    ctx.lineTo(s.x, s.ty + (s.up ? -5 : 5));
+    ctx.stroke();
+  }
+
+  /* frozen boulders */
+  const ri0 = Math.floor((camX - 1500) / ROCK_STEP) - 1;
+  const ri1 = ri0 + Math.ceil(VW / ROCK_STEP) + 3;
+  for (let i = ri0; i <= ri1; i++){
+    const r = rockAt(i); if (!r) continue;
+    ctx.beginPath();
+    for (let a = 0; a <= Math.PI*2 + .01; a += Math.PI/8){
+      const rr = r.r * (0.84 + 0.24 * Math.abs(Math.sin(a*2.5 + r.s*9)));
+      const px = r.x + Math.cos(a)*rr, py = r.y + Math.sin(a)*rr*0.92;
+      if (a === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fillStyle = "#E7F2F7"; ctx.fill();
+    ctx.strokeStyle = ICE; ctx.lineWidth = 2.1*LK; ctx.stroke();
+    ctx.strokeStyle = "rgba(46,127,166,0.4)"; ctx.lineWidth = 1*LK;
+    ctx.beginPath();
+    ctx.moveTo(r.x - r.r*.5, r.y - r.r*.2); ctx.lineTo(r.x + r.r*.1, r.y + r.r*.5);
+    ctx.moveTo(r.x + r.r*.1, r.y + r.r*.5); ctx.lineTo(r.x + r.r*.6, r.y - r.r*.3);
+    ctx.stroke();
+  }
+
+  /* falling ice */
+  for (const [i, d] of drops){
+    if (!d || d.gone) continue;
+    if (d.x < x0 - 60 || d.x > x1 + 60) continue;
+    ctx.save();
+    ctx.translate(d.x, d.y);
+    if (!d.fall){
+      const t = (performance.now()/120 + i) % 1000;
+      ctx.rotate(Math.sin(t*0.06) * 0.05);
+    }
+    ctx.beginPath();
+    ctx.moveTo(-d.r*.8, -d.r*.7); ctx.lineTo(d.r*.9, -d.r*.5);
+    ctx.lineTo(d.r*.4, d.r*.9); ctx.lineTo(-d.r*.6, d.r*.5);
+    ctx.closePath();
+    ctx.fillStyle = "#F4FAFD"; ctx.fill();
+    ctx.strokeStyle = ICE; ctx.lineWidth = 1.9*LK; ctx.stroke();
+    ctx.restore();
+  }
+
+  /* waiting groups */
+  const gi0 = Math.max(0, Math.floor((camX - GROUP_0) / GROUP_GAP));
+  for (let i = gi0; i <= gi0 + 3; i++){
+    const gx = groupX(i);
+    if (gx < camX - 100 || gx > camX + VW + 100) continue;
+    const gy = centerY(gx);
+    if (taken.has(i)){
+      ctx.strokeStyle = "rgba(217,119,43,0.35)"; ctx.lineWidth = 1.6*LK;
+      ctx.beginPath(); ctx.ellipse(gx, gy, 26, 20, .2, 0, Math.PI*2); ctx.stroke();
+      continue;
+    }
+    const n = 5 + (i % 4);
+    ctx.fillStyle = ICE;
+    for (let j = 0; j < n; j++){
+      const a = j/n*Math.PI*2 + i, rr = 6 + (j % 3)*5;
+      ctx.beginPath();
+      ctx.arc(gx + Math.cos(a)*rr, gy + Math.sin(a)*rr + Math.sin(performance.now()/500 + j)*1.6, DOT_R*LK, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.strokeStyle = EMBER; ctx.lineWidth = 1.8*LK;
+    ctx.beginPath(); ctx.ellipse(gx, gy, 24, 19, .25, 0, Math.PI*2); ctx.stroke();
+  }
+
+  /* the swarm */
+  ctx.fillStyle = ICE;
+  const dr = DOT_R * LK;
+  for (const d of dots){ ctx.beginPath(); ctx.arc(d.x, d.y, dr, 0, Math.PI*2); ctx.fill(); }
+
+  for (const m of marks){
+    const k = 1 - m.t/m.life;
+    ctx.globalAlpha = k; ctx.fillStyle = m.c;
+    ctx.beginPath(); ctx.arc(m.x, m.y, m.r*k, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  /* the one written note, first run only */
+  if (mode === S.PLAY && dist < 620){
+    const a = Math.max(0, 1 - dist/620);
+    ctx.globalAlpha = a;
+    ctx.strokeStyle = GLACIER; ctx.lineWidth = 1.8*LK;
+    const ax = camX + LEAD_X - 18, ay = lead.y + 52;
+    ctx.beginPath();
+    ctx.moveTo(ax - 46, ay + 40);
+    ctx.quadraticCurveTo(ax - 30, ay + 6, ax - 4, ay - 8);
+    ctx.moveTo(ax - 4, ay - 8); ctx.lineTo(ax - 14, ay - 3);
+    ctx.moveTo(ax - 4, ay - 8); ctx.lineTo(ax - 6, ay + 5);
+    ctx.stroke();
+    ctx.fillStyle = GLACIER;
+    ctx.font = (13*LK).toFixed(1) + "px ui-monospace, monospace";
+    ctx.fillText("TAP TO LIFT", ax - 128, ay + 56);
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.restore();
+
+  /* snowfall over everything */
+  const heavy = mode === S.INTRO ? 0.35 : zoneAt(camX + LEAD_X).snow;
+  const nf = Math.floor(flakes.length * heavy);
+  for (let i = 0; i < nf; i++){
+    const f = flakes[i];
+    ctx.globalAlpha = 0.25 + f.l*0.5;
+    ctx.fillStyle = f.l > 0.8 ? "#FFFFFF" : "#CFE2EC";
+    ctx.beginPath(); ctx.arc(f.x, f.y, 0.8 + f.l*1.9, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  if (heavy > 0.85){
+    ctx.fillStyle = "rgba(255,255,255,0.13)";
+    ctx.fillRect(0, 0, W, H);
+  }
+  if (grain){ ctx.fillStyle = grain; ctx.fillRect(0, 0, W, H); }
+
+  if (mode !== S.INTRO){
+    document.querySelector("#n-dots b").textContent = dots.length;
+    document.querySelector("#n-dist b").textContent = Math.max(0, Math.floor((camX + LEAD_X)/10)) + " m";
+    document.querySelector("#n-zone b").textContent = zoneName;
+  }
+  document.querySelector("#n-best b").textContent = hi.best + " m";
+}
+
+/* ============================ screens ============================ */
+const screenEl = document.getElementById("screen");
+const pauseEl  = document.getElementById("pause");
+const mainBtn = document.getElementById("btn-main");
+const statsEl = document.getElementById("stats");
+const ledeEl  = document.getElementById("lede");
+const titleEl = document.querySelector("h1");
+
+function showScreen(dead){
+  screenEl.classList.remove("hide");
+  if (dead){
+    const reached = Math.floor((camX + LEAD_X)/10);
+    titleEl.innerHTML = isRecord
+      ? '<span>deeper than ever</span>' + reached + '<b style="font-size:.34em;letter-spacing:.1em"> m</b>'
+      : '<span>the last dot is gone</span>' + reached + '<b style="font-size:.34em;letter-spacing:.1em"> m</b>';
+    ledeEl.innerHTML = isRecord
+      ? "A new best. Nothing is saved down there &mdash; every run starts at the mouth of the crack."
+      : "No checkpoints in the ice. Every run starts at the mouth of the crack.";
+    statsEl.innerHTML =
+      "stopped in <strong>" + zoneName + "</strong> &middot; largest swarm <strong>" + peakDots + "</strong>" +
+      "<br>best <strong>" + hi.best + " m</strong> &middot; runs <strong>" + hi.runs + "</strong>";
+    mainBtn.textContent = "Run again";
+  } else {
+    titleEl.innerHTML = '<span>a swarm inside the mountain</span>The<br>Narrow';
+    mainBtn.textContent = hi.best > 0 ? "Run again" : "Start";
+    statsEl.innerHTML = hi.best > 0
+      ? "best <strong>" + hi.best + " m</strong> &middot; largest swarm <strong>" + hi.bestDots + "</strong>"
+      : "";
+  }
+  mainBtn.focus({ preventScroll: true });
+}
+
+mainBtn.addEventListener("click", e => { e.stopPropagation(); begin(); });
+
+/* ============================ input ============================ */
+function press(e){
+  if (mode !== S.PLAY) return;
+  if (e && e.target && e.target.closest && e.target.closest("button")) return;
+  jump();
+}
+window.addEventListener("pointerdown", press);
+window.addEventListener("keydown", e => {
+  if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW"){
+    if (document.activeElement && document.activeElement.tagName === "BUTTON" && mode !== S.PLAY) return;
+    e.preventDefault(); press(null);
+  }
+});
+document.addEventListener("contextmenu", e => e.preventDefault());
+
+document.getElementById("btn-pause").addEventListener("click", e => { e.stopPropagation(); setPaused(true); });
+document.getElementById("btn-resume").addEventListener("click", e => { e.stopPropagation(); setPaused(false); });
+document.getElementById("btn-quit").addEventListener("click", e => {
+  e.stopPropagation();
+  mode = S.INTRO;
+  pauseEl.classList.remove("on");
+  ledeEl.innerHTML = "A crack in the glacier, and it keeps closing.<br>Tap to lift the swarm. Touch ice and that dot is <em>gone</em>.<br>Reach the next group to grow. Get as deep as you can.";
+  showScreen(false);
+});
+pauseEl.addEventListener("pointerdown", e => {
+  if (e.target === pauseEl) setPaused(false);
+});
+
+/* pause on ESC, and whenever the window loses focus */
+window.addEventListener("keydown", e => {
+  if (e.code === "Escape" || e.code === "KeyP"){
+    e.preventDefault();
+    if (mode === S.PLAY) setPaused(true);
+    else if (mode === S.PAUSE) setPaused(false);
+  }
+});
+let bootAt = performance.now();
+window.addEventListener("blur", () => { if (performance.now() - bootAt > 1500) setPaused(true); });
+document.addEventListener("visibilitychange", () => { if (document.hidden) setPaused(true); });
+
+/* ---- embedded in a portal / iframe: grab focus so keys work ---- */
+const EMBEDDED = (() => { try { return window.self !== window.top; } catch(e){ return true; } })();
+window.addEventListener("pointerdown", () => { try { window.focus(); } catch(e){} }, true);
+
+/* fullscreen (handy when the game sits in a small iframe) */
+const fullBtn = document.getElementById("btn-full");
+const canFull = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+if (!canFull) fullBtn.classList.add("off");
+function toggleFull(){
+  const el = document.documentElement;
+  const on = document.fullscreenElement || document.webkitFullscreenElement;
+  try {
+    if (on) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    else (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+  } catch(e){}
+}
+fullBtn.addEventListener("click", e => { e.stopPropagation(); toggleFull(); });
+window.addEventListener("keydown", e => { if (e.code === "KeyF"){ e.preventDefault(); toggleFull(); } });
+
+/* ============================ boot ============================ */
+resize();
+buildFlakes();
+loadSave().then(() => showScreen(false));
+requestAnimationFrame(frame);
+
+})();
+</script>
+</body>
+</html>
