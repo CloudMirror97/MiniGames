@@ -343,7 +343,13 @@ if (!window.storage) {
 }
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
+// 논리 해상도(W, H)는 900x600 그대로 두고 실제 픽셀 버퍼만 배수로 키운다.
+// 전체화면처럼 확대해서 볼 때 계단현상이 생기지 않는다.
+// 그리기 코드와 마우스 좌표 계산은 전부 논리 좌표를 쓰므로 손댈 필요가 없다.
 const W = canvas.width, H = canvas.height;
+const RENDER_SCALE = 2;
+canvas.width = W * RENDER_SCALE;
+canvas.height = H * RENDER_SCALE;
 
 const titleScreen = document.getElementById('titleScreen');
 const gameoverScreen = document.getElementById('gameoverScreen');
@@ -4930,6 +4936,7 @@ function draw(){
 // ---------- Loop ----------
 let lastTime = performance.now();
 function loop(now){
+  ctx.setTransform(RENDER_SCALE, 0, 0, RENDER_SCALE, 0, 0);
   let dt = (now - lastTime)/1000;
   if (dt > 0.05) dt = 0.05;
   lastTime = now;
