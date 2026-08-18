@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>닌자 도망 - 플레이박스</title>
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #F4F6FB;
+    font-family: "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    color: #14162B;
+  }
+  #hud {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 600px;
+    max-width: 92vw;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+  #hint {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 13px;
+    color: #4a4d6b;
+  }
+  canvas {
+    background: #EDEFF7;
+    border: 3px solid #14162B;
+    border-radius: 12px;
+    outline: none;
+    cursor: pointer;
+    max-width: 92vw;
+    touch-action: none;
+  }
+</style>
+</head>
+<body>
+<div id="hud">
+  <div>방향키 이동 · Space 회피 · Ctrl 베기</div>
+  <div id="scoreOut" style="font-weight:700;">점수 0</div>
+</div>
+<canvas id="game" width="600" height="420" tabindex="0"></canvas>
+<div id="hint">게임 화면을 한 번 클릭한 뒤 키보드로 조작하세요</div>
+<script>
+(function(){
+var canvas=document.getElementById('game');
+var ctx=canvas.getContext('2d');
+var W=canvas.width,H=canvas.height;
+var scoreOut=document.getElementById('scoreOut');
+var INK='#14162B',PRIMARY='#FF3D7A',MINT='#17C990',BLUE='#3D5AFE',YELLOW='#FFC93C';
+
+var keys={};
+var player,projectiles,score,kills,lastSpawn,spawnInterval,gameOver,lastTime;
+
+function reset(){
+  player={x:W/2,y:H/2,r:16,fx:1,fy:0,invulnUntil:0,jumpCdUntil:0,atkCdUntil:0,atkUntil:0};
+  projectiles=[];
+  score=0;kills=0;lastSpawn=0;spawnInterval=900;gameOver=false;
+  lastTime=performance.now();
+}
+reset();
+
+canvas.addEventListener('click',function(){
+  canvas.focus();
+  if(gameOver) reset();
+});
+
+window.addEventListener('keydown',function(e){
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','ControlLeft','ControlRight'].indexOf(e.code)!==-1){
+    e.preventDefault();
+  }
+  var now=performance.now();
+  if(!keys[e.code]){
+    if(e.code==='Space' && !gameOver && now>=player.jumpCdUntil){
+      player.invulnUntil=now+350;
+      player.jumpCdUntil=now+700;
+    }
+    if((e.code==='ControlLeft'||e.code==='ControlRight') && !gameOver && now>=player.atkCdUntil){
+      player.atkUntil=now+150;
+      player.atkCdUntil=now+450;
+      for(var i=projectiles.length-1;i>=0;i--){
+        var p=projectiles[i];
+        var dx=p.x-player.x,dy=p.y-player.y;
+        if(Math.sqrt(dx*dx+dy*dy)<80){
+          projectiles.splice(i,1);
+          score+=5;kills++;
+        }
+      }
+    }
+  }
+  keys[e.code]=true;
+});
+window.addEventListener('keyup',function(e){ keys[e.code]=false; });
+
+function spawnProjectile(){
+  var edge=Math.floor(Math.random()*4);
+  var x,y;
+  if(edge===0){x=Math.random()*W;y=-10;}
+  else if(edge===1){x=W+10;y=Math.random()*H;}
+  else if(edge===2){x=Math.random()*W;y=H+10;}
+  else {x=-10;y=Math.random()*H;}
+  var dx=player.x-x,dy=player.y-y;
+  var d=Math.sqrt(dx*dx+dy*dy)||1;
+  var speed=2.2+Math.min(score*0.01,3.2);
+  projectiles.push({x:x,y:y,vx:dx/d*speed,vy:dy/d*speed,r:6});
+}
+
+function update(now){
+  var dt=Math.min(now-lastTime,50);
+  lastTime=now;
+  if(!gameOver){
+    var mx=0,my=0;
+    if(keys['ArrowLeft']) mx-=1;
+    if(keys['ArrowRight']) mx+=1;
+    if(keys['ArrowUp']) my-=1;
+    if(keys['ArrowDown']) my+=1;
+    if(mx!==0||my!==0){
+      var len=Math.sqrt(mx*mx+my*my);
+      mx/=len;my/=len;
+      player.fx=mx;player.fy=my;
+      player.x=Math.max(player.r,Math.min(W-player.r,player.x+mx*3.4));
+      player.y=Math.max(player.r,Math.min(H-player.r,player.y+my*3.4));
+    }
+
+    lastSpawn+=dt;
+    spawnInterval=Math.max(220,900-score*3);
+    if(lastSpawn>spawnInterval){ lastSpawn=0; spawnProjectile(); }
+
+    for(var i=projectiles.length-1;i>=0;i--){
+      var p=projectiles[i];
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<-30||p.x>W+30||p.y<-30||p.y>H+30){ projectiles.splice(i,1); continue; }
+      var dx=p.x-player.x,dy=p.y-player.y;
+      if(Math.sqrt(dx*dx+dy*dy)<player.r+p.r){
+        if(now<player.invulnUntil){
+          projectiles.splice(i,1);
+          score+=2;
+        } else {
+          gameOver=true;
+        }
+      }
+    }
+    score+=dt*0.01;
+    scoreOut.textContent='점수 '+Math.floor(score);
+  }
+}
+
+function draw(now){
+  ctx.clearRect(0,0,W,H);
+
+  for(var i=0;i<projectiles.length;i++){
+    var p=projectiles[i];
+    var a=now*0.01+i;
+    ctx.save();
+    ctx.translate(p.x,p.y);
+    ctx.rotate(a);
+    ctx.fillStyle=PRIMARY;
+    ctx.strokeStyle=INK;
+    ctx.lineWidth=1.5;
+    ctx.beginPath();
+    ctx.moveTo(0,-p.r*1.6);
+    ctx.lineTo(p.r,0);
+    ctx.lineTo(0,p.r*1.6);
+    ctx.lineTo(-p.r,0);
+    ctx.closePath();
+    ctx.fill();ctx.stroke();
+    ctx.restore();
+  }
+
+  var invuln=now<player.invulnUntil;
+  ctx.save();
+  ctx.translate(player.x,player.y);
+  if(invuln){
+    ctx.fillStyle=MINT;
+    ctx.globalAlpha=0.25;
+    ctx.beginPath();ctx.arc(0,0,player.r+10,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+  }
+  if(now<player.atkUntil){
+    var ang=Math.atan2(player.fy,player.fx);
+    ctx.strokeStyle=YELLOW;
+    ctx.lineWidth=6;
+    ctx.beginPath();
+    ctx.arc(0,0,42,ang-1.1,ang+1.1);
+    ctx.stroke();
+  }
+  ctx.fillStyle=INK;
+  ctx.beginPath();ctx.arc(0,0,player.r,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=PRIMARY;
+  ctx.lineWidth=4;
+  ctx.beginPath();ctx.arc(0,-player.r*0.3,player.r*0.65,Math.PI*1.1,Math.PI*1.9);
+  ctx.stroke();
+  ctx.strokeStyle=BLUE;
+  ctx.lineWidth=4;
+  ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(player.fx*player.r*0.5,player.fy*player.r*0.5);
+  ctx.lineTo(player.fx*player.r*2.4,player.fy*player.r*2.4);
+  ctx.stroke();
+  ctx.restore();
+
+  if(gameOver){
+    ctx.fillStyle='rgba(20,22,43,0.72)';
+    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#ffffff';
+    ctx.textAlign='center';
+    ctx.font='700 22px sans-serif';
+    ctx.fillText('게임 오버',W/2,H/2-14);
+    ctx.font='400 15px sans-serif';
+    ctx.fillText('점수 '+Math.floor(score)+' · 클릭해서 다시 시작',W/2,H/2+16);
+  }
+}
+
+function loop(now){
+  update(now);
+  draw(now);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
