@@ -34,7 +34,7 @@ export default async function GamePage({
         <h1 className="mb-2 text-3xl font-black md:text-4xl">{game.title}</h1>
         <p className="mb-6 text-ink-soft">{game.tagline}</p>
 
-        {game.slug === "ninja-dodge" ? (
+        {game.tag !== "준비중" ? (
           <div className="sticker overflow-hidden rounded-xl bg-surface">
             <iframe
               src={`/games/${game.slug}/index.html`}
