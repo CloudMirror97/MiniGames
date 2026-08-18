@@ -56,4 +56,11 @@ export const games: Game[] = [
     tag: "준비중",
     color: "mint",
   },
+  {
+  slug: "into-the-dungeon",
+  title: "인투 더 던전",
+  tagline: "5개 층을 뚫는 로그라이크 던전 슈터",
+  tag: "신규",
+  color: "blue",
+  },
 ];
