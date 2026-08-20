@@ -17,8 +17,8 @@ export const GENRES = [
   { id: "rpg", label: "RPG·어드벤처" },
   { id: "arcade", label: "아케이드" },
   { id: "racing", label: "레이싱" },
-  { id: "racing", label: "캐주얼" },
-  { id: "racing", label: "로그라이크" },
+  { id: "casual", label: "캐주얼" },
+  { id: "roguelike", label: "로그라이크" },
 ] as const;
 
 export type GenreId = (typeof GENRES)[number]["id"];
