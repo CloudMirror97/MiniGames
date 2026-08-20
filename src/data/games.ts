@@ -6,7 +6,11 @@ export type Game = {
   tagline: string;
   tag: "신규" | "인기" | "준비중";
   color: "primary" | "mint" | "blue" | "yellow";
-  /** 왼쪽 메뉴에서 어느 장르로 묶일지. 목록은 genres.ts 참고. */
+  /**
+   * 왼쪽 메뉴에서 어느 장르로 묶일지. 목록은 genres.ts 참고.
+   * 여러 개를 적으면 해당 장르 모두에서 이 게임이 보인다.
+   * 최소 한 개는 있어야 한다.
+   */
   genres: [GenreId, ...GenreId[]];
   /**
    * 고정 크기로 만들어진 게임의 원래 픽셀 크기.
@@ -23,7 +27,7 @@ export const games: Game[] = [
     tagline: "사방에서 날아오는 표창을 피하고 베어내기",
     tag: "신규",
     color: "primary",
-    genre: ["action", "casual"],
+    genres: ["action", "casual"],
     size: { width: 620, height: 500 },
   },
   {
@@ -32,7 +36,7 @@ export const games: Game[] = [
     tagline: "5개 층을 뚫는 로그라이크 던전 슈터",
     tag: "신규",
     color: "blue",
-    genre: ["shooting", "roguelike"],
+    genres: ["shooting", "roguelike"],
     size: { width: 912, height: 612 },
   },
   {
@@ -41,7 +45,7 @@ export const games: Game[] = [
     tagline: "3종족 RTS · 싱글 & 온라인 멀티",
     tag: "신규",
     color: "blue",
-    genre: ["strategy"],
+    genres: ["strategy"],
   },
   {
     slug: "wildlands-survivor",
@@ -49,7 +53,7 @@ export const games: Game[] = [
     tagline: "5개 지역을 정복하고 용을 쓰러뜨려라",
     tag: "신규",
     color: "mint",
-    genre: ["rpg", "roguelike"],
+    genres: ["rpg", "roguelike"],
     size: { width: 910, height: 610 },
   },
   {
@@ -58,7 +62,7 @@ export const games: Game[] = [
     tagline: "버려진 지역을 탈출하여 주인으로 돌아가는 강아지의 이야기",
     tag: "신규",
     color: "yellow",
-    genre: ["rpg", "shooting", "roguelike"],
+    genres: ["rpg", "shooting", "roguelike"],
   },
   {
     slug: "the-narrow",
@@ -66,7 +70,7 @@ export const games: Game[] = [
     tagline: "빙하 틈을 통과하는 점 무리",
     tag: "신규",
     color: "blue",
-    genre: ["arcade", "casual"],
+    genres: ["arcade", "casual"],
   },
   {
     slug: "tetris",
@@ -74,7 +78,7 @@ export const games: Game[] = [
     tagline: "떨어지는 블록을 쌓는 클래식 퍼즐",
     tag: "준비중",
     color: "primary",
-    genre: ["puzzle", "casual"],
+    genres: ["puzzle", "casual"],
   },
   {
     slug: "2048",
@@ -82,7 +86,7 @@ export const games: Game[] = [
     tagline: "숫자를 합쳐 2048을 만들어보세요",
     tag: "준비중",
     color: "mint",
-    genre: ["puzzle", "casual"],
+    genres: ["puzzle", "casual"],
   },
   {
     slug: "omok",
@@ -90,7 +94,7 @@ export const games: Game[] = [
     tagline: "다섯 개를 먼저 연결하면 승리",
     tag: "준비중",
     color: "mint",
-    genre: ["puzzle", "casual"],
+    genres: ["puzzle", "casual"],
   },
   {
     slug: "jumpmap",
@@ -98,7 +102,7 @@ export const games: Game[] = [
     tagline: "떨어지지 않고 끝까지 점프하기",
     tag: "준비중",
     color: "blue",
-    genre: ["action", "casual"],
+    genres: ["action", "casual"],
   },
   {
     slug: "flappy-block",
@@ -106,7 +110,7 @@ export const games: Game[] = [
     tagline: "장애물을 피해 최고 기록에 도전",
     tag: "준비중",
     color: "yellow",
-    genre: ["arcade", "casual"],
+    genres: ["arcade", "casual"],
   },
   {
     slug: "speed-typing",
@@ -114,6 +118,6 @@ export const games: Game[] = [
     tagline: "친구와 실시간 타자 속도 대결",
     tag: "준비중",
     color: "primary",
-    genre: ["arcade", "casual"],
+    genres: ["arcade", "casual"],
   },
 ];
