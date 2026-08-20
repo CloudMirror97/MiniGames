@@ -10,7 +10,9 @@ import GenreNav from "./GenreNav";
 // 장르별 게임 수는 목록이 바뀌지 않는 한 항상 같으므로 한 번만 계산한다.
 const counts: Record<string, number> = { [ALL_GENRES]: games.length };
 for (const genre of GENRES) {
-  counts[genre.id] = games.filter((game) => game.genre === genre.id).length;
+  counts[genre.id] = games.filter((game) =>
+  game.genres.includes(genre.id),
+).length;
 }
 
 const NAV_STORAGE_KEY = "playbox:genreNavOpen";
@@ -20,9 +22,9 @@ export default function GameGrid() {
   // 주소창에 이상한 값이 들어와도 전체 보기로 떨어지게 한다.
   const active = normalizeGenre(params.get("genre"));
   const visible =
-    active === ALL_GENRES
-      ? games
-      : games.filter((game) => game.genre === active);
+  active === ALL_GENRES
+    ? games
+    : games.filter((game) => game.genres.includes(active));
 
   // 서버에서 그릴 때와 첫 렌더가 어긋나면 안 되므로 항상 열린 상태로 시작하고,
   // 브라우저에 올라온 뒤에 저장된 값을 반영한다.
