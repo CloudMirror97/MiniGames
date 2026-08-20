@@ -23,7 +23,7 @@ export const games: Game[] = [
     tagline: "사방에서 날아오는 표창을 피하고 베어내기",
     tag: "신규",
     color: "primary",
-    genre: "action",
+    genre: ["action", "casual"],
     size: { width: 620, height: 500 },
   },
   {
@@ -32,7 +32,7 @@ export const games: Game[] = [
     tagline: "5개 층을 뚫는 로그라이크 던전 슈터",
     tag: "신규",
     color: "blue",
-    genre: "shooting",
+    genre: ["shooting", "roguelike"]
     size: { width: 912, height: 612 },
   },
   {
@@ -49,7 +49,7 @@ export const games: Game[] = [
     tagline: "5개 지역을 정복하고 용을 쓰러뜨려라",
     tag: "신규",
     color: "mint",
-    genre: "rpg",
+    genre: ["rpg", "roguelike"],
     size: { width: 910, height: 610 },
   },
   {
@@ -58,7 +58,7 @@ export const games: Game[] = [
     tagline: "버려진 지역을 탈출하여 주인으로 돌아가는 강아지의 이야기",
     tag: "신규",
     color: "yellow",
-    genre: "rpg",
+    genre: ["rpg", "shooting", "roguelike"],
   },
   {
     slug: "the-narrow",
@@ -66,7 +66,7 @@ export const games: Game[] = [
     tagline: "빙하 틈을 통과하는 점 무리",
     tag: "신규",
     color: "blue",
-    genre: "arcade",
+    genre: ["arcade", "casual"],
   },
   {
     slug: "tetris",
@@ -74,7 +74,7 @@ export const games: Game[] = [
     tagline: "떨어지는 블록을 쌓는 클래식 퍼즐",
     tag: "준비중",
     color: "primary",
-    genre: "puzzle",
+    genre: ["puzzle", "casual"],
   },
   {
     slug: "2048",
@@ -82,7 +82,7 @@ export const games: Game[] = [
     tagline: "숫자를 합쳐 2048을 만들어보세요",
     tag: "준비중",
     color: "mint",
-    genre: "puzzle",
+    genre: ["puzzle", "casual"],
   },
   {
     slug: "omok",
@@ -90,7 +90,7 @@ export const games: Game[] = [
     tagline: "다섯 개를 먼저 연결하면 승리",
     tag: "준비중",
     color: "mint",
-    genre: "puzzle",
+    genre: ["puzzle", "casual"],
   },
   {
     slug: "jumpmap",
@@ -98,7 +98,7 @@ export const games: Game[] = [
     tagline: "떨어지지 않고 끝까지 점프하기",
     tag: "준비중",
     color: "blue",
-    genre: "action",
+    genre: ["action", "casual"],
   },
   {
     slug: "flappy-block",
@@ -106,7 +106,7 @@ export const games: Game[] = [
     tagline: "장애물을 피해 최고 기록에 도전",
     tag: "준비중",
     color: "yellow",
-    genre: "arcade",
+    genre: ["arcade", "casual"],
   },
   {
     slug: "speed-typing",
@@ -114,6 +114,6 @@ export const games: Game[] = [
     tagline: "친구와 실시간 타자 속도 대결",
     tag: "준비중",
     color: "primary",
-    genre: "arcade",
+    genre: ["arcade", "casual"],
   },
 ];
