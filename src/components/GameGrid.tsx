@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { games, type Game } from "@/data/games";
 import { ALL_GENRES, GENRES, genreLabel, normalizeGenre } from "@/data/genres";
@@ -21,7 +21,23 @@ for (const genre of GENRES) {
 
 const NAV_STORAGE_KEY = "playbox:genreNavOpen";
 
+/**
+ * 주소창의 ?genre= 를 읽는 컴포넌트는 Suspense 안에 있어야 한다.
+ * 그 경계를 여기서 직접 만들어 두면 page.tsx 는 손대지 않아도 된다.
+ */
 export default function GameGrid() {
+  return (
+    <Suspense
+      fallback={
+        <section className="mx-auto min-h-[480px] max-w-6xl px-5 py-14 md:py-20" />
+      }
+    >
+      <GameGridContent />
+    </Suspense>
+  );
+}
+
+function GameGridContent() {
   const params = useSearchParams();
   // 주소창에 이상한 값이 들어와도 전체 보기로 떨어지게 한다.
   const active = normalizeGenre(params ? params.get("genre") : null);
