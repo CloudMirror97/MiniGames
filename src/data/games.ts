@@ -87,4 +87,11 @@ export const games: Game[] = [
   tag: "신규",
   color: "blue"
   },
+  {
+  slug: "wildlands-survivor",
+  title: "와일드랜드 서바이버",
+  tagline: "5개 지역을 정복하고 용을 쓰러뜨려라",
+  tag: "신규",
+  color: "mint",
+  },
 ];
