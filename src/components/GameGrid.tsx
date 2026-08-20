@@ -2,18 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { games } from "@/data/games";
+import { games, type Game } from "@/data/games";
 import { ALL_GENRES, GENRES, genreLabel, normalizeGenre } from "@/data/genres";
 import GameCard from "./GameCard";
 import GenreNav from "./GenreNav";
 
+/** 이 게임이 해당 장르에 속하는지. 한 게임이 장르를 여러 개 가질 수 있다. */
+function hasGenre(game: Game, genre: string): boolean {
+  return (game.genres as readonly string[]).includes(genre);
+}
+
 // 장르별 게임 수는 목록이 바뀌지 않는 한 항상 같으므로 한 번만 계산한다.
-// 한 게임이 장르를 여러 개 가질 수 있으므로 각 장르 수의 합은 전체 개수보다 클 수 있다.
+// 게임이 장르를 여러 개 가질 수 있으므로 각 장르 수의 합은 전체 개수보다 클 수 있다.
 const counts: Record<string, number> = { [ALL_GENRES]: games.length };
 for (const genre of GENRES) {
-  counts[genre.id] = games.filter((game) =>
-    game.genres.includes(genre.id),
-  ).length;
+  counts[genre.id] = games.filter((game) => hasGenre(game, genre.id)).length;
 }
 
 const NAV_STORAGE_KEY = "playbox:genreNavOpen";
@@ -21,11 +24,11 @@ const NAV_STORAGE_KEY = "playbox:genreNavOpen";
 export default function GameGrid() {
   const params = useSearchParams();
   // 주소창에 이상한 값이 들어와도 전체 보기로 떨어지게 한다.
-  const active = normalizeGenre(params.get("genre"));
+  const active = normalizeGenre(params ? params.get("genre") : null);
   const visible =
     active === ALL_GENRES
       ? games
-      : games.filter((game) => game.genres.includes(active));
+      : games.filter((game) => hasGenre(game, active));
 
   // 서버에서 그릴 때와 첫 렌더가 어긋나면 안 되므로 항상 열린 상태로 시작하고,
   // 브라우저에 올라온 뒤에 저장된 값을 반영한다.
@@ -33,7 +36,9 @@ export default function GameGrid() {
 
   useEffect(() => {
     try {
-      if (localStorage.getItem(NAV_STORAGE_KEY) === "closed") setNavOpen(false);
+      if (localStorage.getItem(NAV_STORAGE_KEY) === "closed") {
+        setNavOpen(false);
+      }
     } catch {
       // 저장소를 못 쓰는 환경이면 그냥 기본값(열림)으로 둔다.
     }
@@ -75,10 +80,11 @@ export default function GameGrid() {
         <div className="min-w-0 flex-1">
           {visible.length > 0 ? (
             <div
-              className={[
-                "grid grid-cols-2 gap-4 md:gap-6",
-                navOpen ? "lg:grid-cols-3" : "lg:grid-cols-4",
-              ].join(" ")}
+              className={
+                navOpen
+                  ? "grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3"
+                  : "grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-4"
+              }
             >
               {visible.map((game) => (
                 <GameCard key={game.slug} game={game} />
