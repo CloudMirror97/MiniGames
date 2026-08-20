@@ -32,7 +32,7 @@ export const games: Game[] = [
     tagline: "5개 층을 뚫는 로그라이크 던전 슈터",
     tag: "신규",
     color: "blue",
-    genre: ["shooting", "roguelike"]
+    genre: ["shooting", "roguelike"],
     size: { width: 912, height: 612 },
   },
   {
@@ -41,7 +41,7 @@ export const games: Game[] = [
     tagline: "3종족 RTS · 싱글 & 온라인 멀티",
     tag: "신규",
     color: "blue",
-    genre: "strategy",
+    genre: ["strategy"],
   },
   {
     slug: "wildlands-survivor",
