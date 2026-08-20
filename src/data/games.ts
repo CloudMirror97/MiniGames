@@ -80,4 +80,11 @@ export const games: Game[] = [
   tag: "신규",
   color: "blue",
   },
+  {
+  slug: "star-outpost",
+  title: "스타 아웃포스트",
+  tagline: "3종족 RTS · 싱글 & 온라인 멀티",
+  tag: "신규",
+  color: "blue"
+  },
 ];
