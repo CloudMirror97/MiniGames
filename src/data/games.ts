@@ -7,7 +7,7 @@ export type Game = {
   tag: "신규" | "인기" | "준비중";
   color: "primary" | "mint" | "blue" | "yellow";
   /** 왼쪽 메뉴에서 어느 장르로 묶일지. 목록은 genres.ts 참고. */
-  genre: GenreId;
+  genres: [GenreId, ...GenreId[]];
   /**
    * 고정 크기로 만들어진 게임의 원래 픽셀 크기.
    * 지정하면 전체화면에서 이 크기를 기준으로 통째로 확대된다.
